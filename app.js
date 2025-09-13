@@ -60,8 +60,75 @@ app.post(
         });
       }
 
+      if (name === "chiikawa" && id) {
+        const context = req.body.context;
+        const userId =
+          context === 0 ? req.body.member.user.id : req.body.user.id;
+        // const objectName = req.body.data.options[0].value;
+
+        activeGames[id] = {
+          id: userId,
+          // objectName,
+        };
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            flags:
+              InteractionResponseFlags.IS_COMPONENTS_V2 |
+              InteractionResponseFlags.EPHEMERAL,
+            components: [
+              {
+                type: MessageComponentTypes.TEXT_DISPLAY,
+                content: `Go save chiikawa, <@${userId}>!`,
+              },
+              {
+                type: MessageComponentTypes.ACTION_ROW,
+                components: [
+                  {
+                    type: MessageComponentTypes.BUTTON,
+                    custom_id: `accept_button_${req.body.id}`,
+                    label: "Accept",
+                    style: ButtonStyleTypes.PRIMARY,
+                  },
+                ],
+              },
+            ],
+          },
+        });
+      }
       console.error(`unknown command: ${name}`);
       return res.status(400).json({ error: "unknown command" });
+    }
+    if (type === InteractionType.MESSAGE_COMPONENT) {
+      const componentId = data.custom_id;
+
+      if (componentId.startsWith("accept_button_")) {
+        const gameId = componentId.replace("accept_button_", "");
+        const endpoint = `webhooks/${process.env.APP_ID}/${req.body.token}/messages/${req.body.message.id}`;
+        const tries = 5;
+
+        try {
+          res.send({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              flags: InteractionResponseFlags.IS_COMPONENTS_V2,
+              components: [
+                {
+                  type: MessageComponentTypes.TEXT_DISPLAY,
+                  content: "Guess the word to save chiikawa!",
+                },
+                {
+                  type: MessageComponentTypes.TEXT_DISPLAY,
+                  content: `You have ${tries} tries!`,
+                },
+              ],
+            },
+          });
+        } catch (err) {
+          console.error("Error sending message:", err);
+        }
+      }
+      return;
     }
 
     console.error("unknown interaction type", type);

@@ -10,8 +10,15 @@ const TEST_COMMAND = {
   contexts: [0, 1, 2],
 };
 
+const GAME_COMMAND = {
+  name: "chiikawa",
+  description: "Save Chiikawa!",
+  type: 1,
+  integration_types: [0, 1],
+  context: [0, 1, 2],
+};
 // Command containing options
 
-const ALL_COMMANDS = [TEST_COMMAND];
+const ALL_COMMANDS = [TEST_COMMAND, GAME_COMMAND];
 
 InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
