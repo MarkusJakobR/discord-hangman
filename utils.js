@@ -61,3 +61,43 @@ export function getRandomEmoji() {
 export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export async function handleGuess(letter, message, game, activeGames) {
+  const { secretWord, guessedLetters, maxTries } = game;
+
+  if (guessedLetters.includes(letter)) {
+    await message.reply(`You already guessed **${letter}**!`);
+    return;
+  }
+
+  game.guessedLetters.push(letter);
+
+  if (secretWord.includes(letter)) {
+    game.hiddenWord = secretWord
+      .split("")
+      .map((ch) =>
+        ch === " " ? " " : game.guessedLetters.includes(ch) ? ch : "_",
+      )
+      .join(" ");
+
+    await message.reply(`✅ Good guess! \n\`\`\`\n${game.hiddenWord}\n\`\`\``);
+
+    if (!game.hiddenWord.includes("_")) {
+      await message.reply(
+        `🎉 Congratulations <@${game.playerId}>, you saved Chiikawa!`,
+      );
+      delete activeGames[message.channel.id];
+    }
+  } else {
+    game.wrongGuesses++;
+
+    await message.reply(
+      `❌ Wrong! You have ${maxTries - game.wrongGuesses} tries left.\n\`\`\`\n${game.hiddenWord}\n\`\`\``,
+    );
+
+    if (game.wrongGuesses >= maxTries) {
+      await message.reply(`💀 Game over! The word was **${secretWord}**.`);
+      delete activeGames[message.channel.id];
+    }
+  }
+}
