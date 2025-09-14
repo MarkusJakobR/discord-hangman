@@ -1,4 +1,31 @@
 import "dotenv/config";
+import express from "express";
+import { EmbedBuilder } from "discord.js";
+
+const gifs = {
+  start: ["https://media.tenor.com/k9PP5BZ0_CcAAAAd/chiikawa-jail.gif"],
+  correct: [
+    "https://media.tenor.com/U7s8InXQnyQAAAAd/ちいかわ-chiikawa.gif",
+    "https://media.tenor.com/lt2zYKuEiNAAAAAd/chiikawa-chiikawa-dance.gif",
+  ],
+  wrong: [
+    "https://media.tenor.com/VzO_AzAqboMAAAAd/chikawa-ちいかわ.gif",
+    "https://media.tenor.com/WGfra-Y_Ke0AAAAd/chiikawa-sad.gif",
+  ],
+  win: [
+    "https://media.tenor.com/E0NiMsdDEzcAAAAd/chiikawa-hachiware.gif",
+    "https://media1.tenor.com/m/xrSi98HyjLoAAAAd/chiikawa-hachiware.gif",
+  ],
+  lose: [
+    "https://media.tenor.com/duB8JcH5gfcAAAAd/chiikawa-chiikawa-sad.gif",
+    "https://media.tenor.com/QM4ZESS5tpUAAAAd/ちいかわ-chiikawa.gif",
+  ],
+};
+
+export function randomGif(type) {
+  const arr = gifs[type];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 export async function DiscordRequest(endpoint, options) {
   // append endpoint to root API URL
@@ -63,7 +90,7 @@ export function capitalize(str) {
 }
 
 export async function handleGuess(letter, message, game, activeGames) {
-  const { secretWord, guessedLetters, maxTries } = game;
+  const { secretWord, guessedLetters, maxTries, gameMsg } = game;
 
   if (guessedLetters.includes(letter)) {
     await message.reply(`You already guessed **${letter}**!`);
@@ -80,23 +107,106 @@ export async function handleGuess(letter, message, game, activeGames) {
       )
       .join(" ");
 
-    await message.reply(`✅ Good guess! \n\`\`\`\n${game.hiddenWord}\n\`\`\``);
+    const updateMsg = new EmbedBuilder()
+      .setTitle("Guess the word to save Chiikawa!")
+      .setDescription(`\`\`\`\nWord: ${game.hiddenWord}\n\`\`\``)
+      .setColor(0x57f287)
+      .addFields(
+        {
+          name: "Tries Left",
+          value: (maxTries - game.wrongGuesses).toString(),
+          inline: true,
+        },
+        {
+          name: "Guesses Made",
+          value: game.guessedLetters.join(", "),
+        },
+      )
+      .setFooter({
+        text: "Type a single letter in the chat to make a guess.",
+      })
+      .setImage(randomGif("correct"));
+
+    const winningMsg = new EmbedBuilder()
+      .setTitle("🎉 Congratulations! You saved Chiikawa!")
+      .setDescription(`\`\`\`\nWord: ${game.hiddenWord}\n\`\`\``)
+      .setColor(0x57f287)
+      .addFields(
+        {
+          name: "Tries Left",
+          value: (maxTries - game.wrongGuesses).toString(),
+          inline: true,
+        },
+        {
+          name: "Guesses Made",
+          value: game.guessedLetters.join(", "),
+        },
+      )
+      .setImage(randomGif("win"));
+
+    await gameMsg.edit({
+      content: "✅ Correct Guess!",
+      embeds: [updateMsg],
+    });
 
     if (!game.hiddenWord.includes("_")) {
-      await message.reply(
-        `🎉 Congratulations <@${game.playerId}>, you saved Chiikawa!`,
-      );
+      await gameMsg.edit({
+        content: ``,
+        embeds: [winningMsg],
+      });
       delete activeGames[message.channel.id];
     }
   } else {
     game.wrongGuesses++;
 
-    await message.reply(
-      `❌ Wrong! You have ${maxTries - game.wrongGuesses} tries left.\n\`\`\`\n${game.hiddenWord}\n\`\`\``,
-    );
+    const updateMsg = new EmbedBuilder()
+      .setTitle("Guess the word to save Chiikawa!")
+      .setDescription(`\`\`\`\nWord: ${game.hiddenWord}\n\`\`\``)
+      .setColor(0xed4245)
+      .addFields(
+        {
+          name: "Tries Left",
+          value: (maxTries - game.wrongGuesses).toString(),
+          inline: true,
+        },
+        {
+          name: "Guesses Made",
+          value: game.guessedLetters.join(", "),
+        },
+      )
+      .setFooter({
+        text: "Type a single letter in the chat to make a guess.",
+      })
+      .setImage(randomGif("wrong"));
+
+    const losingMsg = new EmbedBuilder()
+      .setTitle("💀 You lost! Chiikawa is stuck in jail..")
+      .setDescription(`\`\`\`\nThe word was: ${game.secretWord}\n\`\`\``)
+      .setColor(0xed4245)
+      .addFields(
+        {
+          name: "Tries Left",
+          value: (maxTries - game.wrongGuesses).toString(),
+          inline: true,
+        },
+        {
+          name: "Guesses Made",
+          value: game.guessedLetters.join(", "),
+        },
+      )
+      .setImage(randomGif("lose"));
+
+    await gameMsg.edit({
+      content: `❌ Wrong Guess!`,
+      embeds: [updateMsg],
+    });
 
     if (game.wrongGuesses >= maxTries) {
-      await message.reply(`💀 Game over! The word was **${secretWord}**.`);
+      await gameMsg.edit({
+        content: ``,
+        embeds: [losingMsg],
+      });
+
       delete activeGames[message.channel.id];
     }
   }

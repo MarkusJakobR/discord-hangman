@@ -8,8 +8,13 @@ import {
   MessageComponentTypes,
   verifyKeyMiddleware,
 } from "discord-interactions";
-import { getRandomEmoji, DiscordRequest, handleGuess } from "./utils.js";
-import { Client, GatewayIntentBits } from "discord.js";
+import {
+  getRandomEmoji,
+  DiscordRequest,
+  handleGuess,
+  randomGif,
+} from "./utils.js";
+import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
 
 const client = new Client({
   intents: [
@@ -25,7 +30,7 @@ const PORT = process.env.PORT || 3000;
 // To keep track of our active games
 const activeGames = {};
 
-client.on("ready", () => {
+client.on("clientReady", () => {
   console.log(`✅ Bot logged in as ${client.user.tag}!`);
 });
 
@@ -139,72 +144,71 @@ app.post(
       const componentId = data.custom_id;
 
       if (componentId.startsWith("accept_button_")) {
+        res.send({
+          type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+        });
+
         const gameId = componentId.replace("accept_button_", "");
-        const endpoint = `webhooks/${process.env.APP_ID}/${req.body.token}/messages/${req.body.message.id}`;
         const tries = 5;
-        const channelId = req.body.channel_id;
+        const channelId = req.body.channel_id || req.body.message?.channel_id;
 
         const words = [
-          "BEAUTIFUL",
-          "CREATIVE",
-          "LESSON",
-          "DEVELOPMENT",
+          "PORK STEAK",
+          "ADOBONG MANOK",
+          "HONKAI STAR RAIL",
+          "GROW A GARDEN",
           "GENSHIN IMPACT",
-          "VALORANT",
-          "COORDINATION",
-          "FRIEND",
-          "GAMES",
+          "RIOT GAMES",
+          "PEPPERONI PIZZA",
+          "BEST FRIEND",
+          "VIDEO GAMES",
         ];
 
         const secretWord = words[Math.floor(Math.random() * words.length)];
         const hiddenWord = secretWord
           .split("")
-          .map((letter) => "_")
+          .map((letter) => (letter === " " ? " " : "_"))
           .join(" ");
 
         console.log("secretWord:", secretWord);
         console.log("hiddenWord:", hiddenWord);
 
-        activeGames[channelId] = {
-          secretWord: secretWord,
-          hiddenWord: hiddenWord,
-          guessedLetters: [],
-          wrongGuesses: 0,
-          maxTries: tries,
-          playerId: req.body.member?.user.id || req.body.user.id,
-          gameId: gameId,
-        };
-        try {
-          res.send({
-            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-            data: {
-              content: "A new game has started!",
-              embeds: [
-                {
-                  title: "Guess the word to save Chiikawa!",
-                  description: `\`\`\`\nWord: ${hiddenWord}\n\`\`\``,
-                  color: 0x5865f2,
-                  fields: [
-                    {
-                      name: "Tries left",
-                      value: tries.toString(),
-                      inline: true,
-                    },
-                    {
-                      name: "Guessed Letters",
-                      value: "None yet",
-                      inline: true,
-                    },
-                  ],
-                  footer: {
-                    text: "Type a single letter in the chat to make a guess.",
-                  },
-                },
-              ],
+        const gameEmbed = new EmbedBuilder()
+          .setTitle("Guess the word to save Chiikawa!")
+          .setDescription(`\`\`\`\nWord: ${hiddenWord}\n\`\`\``)
+          .setColor(0x5865f2)
+          .addFields(
+            { name: "Tries Left", value: tries.toString(), inline: true },
+            {
+              name: "Guesses Made",
+              value: "None Yet",
             },
+          )
+          .setFooter({
+            text: "Type a single letter in the chat to make a guess.",
+          })
+          .setImage(randomGif("start"));
+
+        try {
+          const channel = await client.channels.fetch(channelId);
+          console.log("Test message sent");
+          const startMsg = await channel.send({
+            content: "A new game has started!",
+            embeds: [gameEmbed],
           });
-        } catch (err) {
-          console.error("Error sending message:", err);
+
+          activeGames[channelId] = {
+            secretWord: secretWord,
+            hiddenWord: hiddenWord,
+            guessedLetters: [],
+            wrongGuesses: 0,
+            maxTries: tries,
+            playerId: req.body.member?.user.id || req.body.user.id,
+            gameId: gameId,
+            gameMsg: startMsg,
+          };
+        } catch (error) {
+          console.error("Error sending game message: ", error);
         }
       }
       return;
