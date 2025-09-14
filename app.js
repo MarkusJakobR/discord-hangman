@@ -47,7 +47,7 @@ client.on("messageCreate", async (message) => {
     console.log("Detected author id not equal to player id");
     return;
   }
-  if (message.content.length === 1 && /[a-zA-z1-9]/.test(message.content)) {
+  if (message.content.length === 1 && /[a-zA-Z0-9'()-]/.test(message.content)) {
     console.log("Detected content is 1 char");
     const guessedLetter = message.content.toUpperCase();
     console.log("Guessed Letter: ", guessedLetter);
