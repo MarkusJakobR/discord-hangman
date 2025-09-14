@@ -15,6 +15,7 @@ import {
   randomGif,
 } from "./utils.js";
 import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
+import { getPlaylistTracks, MY_PLAYLIST } from "./spotify.js";
 
 const client = new Client({
   intents: [
@@ -51,7 +52,7 @@ client.on("messageCreate", async (message) => {
     console.log("Detected author id not equal to player id");
     return;
   }
-  if (message.content.length === 1 && /[a-zA-z]/.test(message.content)) {
+  if (message.content.length === 1 && /[a-zA-z1-9]/.test(message.content)) {
     console.log("Detected content is 1 char");
     const guessedLetter = message.content.toUpperCase();
     console.log("Guessed Letter: ", guessedLetter);
@@ -149,22 +150,24 @@ app.post(
         });
 
         const gameId = componentId.replace("accept_button_", "");
-        const tries = 5;
+        const tries = 7;
         const channelId = req.body.channel_id || req.body.message?.channel_id;
 
-        const words = [
-          "PORK STEAK",
-          "ADOBONG MANOK",
-          "HONKAI STAR RAIL",
-          "GROW A GARDEN",
-          "GENSHIN IMPACT",
-          "RIOT GAMES",
-          "PEPPERONI PIZZA",
-          "BEST FRIEND",
-          "VIDEO GAMES",
-        ];
+        const words = await getPlaylistTracks(MY_PLAYLIST);
+        // const words = [
+        //   "PORK STEAK",
+        //   "ADOBONG MANOK",
+        //   "HONKAI STAR RAIL",
+        //   "GROW A GARDEN",
+        //   "GENSHIN IMPACT",
+        //   "RIOT GAMES",
+        //   "PEPPERONI PIZZA",
+        //   "BEST FRIEND",
+        //   "VIDEO GAMES",
+        // ];
 
-        const secretWord = words[Math.floor(Math.random() * words.length)];
+        const secretWord =
+          words[Math.floor(Math.random() * words.length)].toUpperCase();
         const hiddenWord = secretWord
           .split("")
           .map((letter) => (letter === " " ? " " : "_"))

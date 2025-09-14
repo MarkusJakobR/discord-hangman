@@ -14,7 +14,7 @@ const gifs = {
   ],
   win: [
     "https://media.tenor.com/E0NiMsdDEzcAAAAd/chiikawa-hachiware.gif",
-    "https://media1.tenor.com/m/xrSi98HyjLoAAAAd/chiikawa-hachiware.gif",
+    "https://media.tenor.com/xrSi98HyjLoAAAAd/chiikawa-hachiware.gif",
   ],
   lose: [
     "https://media.tenor.com/duB8JcH5gfcAAAAd/chiikawa-chiikawa-sad.gif",
