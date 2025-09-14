@@ -8,12 +8,7 @@ import {
   MessageComponentTypes,
   verifyKeyMiddleware,
 } from "discord-interactions";
-import {
-  getRandomEmoji,
-  DiscordRequest,
-  handleGuess,
-  randomGif,
-} from "./utils.js";
+import { DiscordRequest, handleGuess, randomGif } from "./utils.js";
 import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
 import { getPlaylistTracks, MY_PLAYLIST } from "./spotify.js";
 
@@ -83,24 +78,6 @@ app.post(
      */
     if (type === InteractionType.APPLICATION_COMMAND) {
       const { name } = data;
-
-      // "test" command
-      if (name === "test") {
-        // Send a message into the channel where command was triggered from
-        return res.send({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            flags: InteractionResponseFlags.IS_COMPONENTS_V2,
-            components: [
-              {
-                type: MessageComponentTypes.TEXT_DISPLAY,
-                // Fetches a random emoji to send from a helper function
-                content: `hello world ${getRandomEmoji()}`,
-              },
-            ],
-          },
-        });
-      }
 
       if (name === "chiikawa" && id) {
         const context = req.body.context;
@@ -178,7 +155,9 @@ app.post(
 
         const gameEmbed = new EmbedBuilder()
           .setTitle("Guess the word to save Chiikawa!")
-          .setDescription(`\`\`\`\nWord: ${hiddenWord}\n\`\`\``)
+          .setDescription(
+            `Category is top 50 songs in PH!\n\n \`\`\`\nWord: ${hiddenWord}\n\`\`\``,
+          )
           .setColor(0x5865f2)
           .addFields(
             { name: "Tries Left", value: tries.toString(), inline: true },

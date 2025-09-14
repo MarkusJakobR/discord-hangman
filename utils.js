@@ -64,27 +64,6 @@ export async function InstallGlobalCommands(appId, commands) {
   }
 }
 
-// Simple method that returns a random emoji from list
-export function getRandomEmoji() {
-  const emojiList = [
-    "😭",
-    "😄",
-    "😌",
-    "🤓",
-    "😎",
-    "😤",
-    "🤖",
-    "😶‍🌫️",
-    "🌏",
-    "📸",
-    "💿",
-    "👋",
-    "🌊",
-    "✨",
-  ];
-  return emojiList[Math.floor(Math.random() * emojiList.length)];
-}
-
 export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -109,7 +88,9 @@ export async function handleGuess(letter, message, game, activeGames) {
 
     const updateMsg = new EmbedBuilder()
       .setTitle("Guess the word to save Chiikawa!")
-      .setDescription(`\`\`\`\nWord: ${game.hiddenWord}\n\`\`\``)
+      .setDescription(
+        `Category is top 50 songs in PH!\n\n \`\`\`\nWord: ${game.hiddenWord}\n\`\`\``,
+      )
       .setColor(0x57f287)
       .addFields(
         {
@@ -161,7 +142,9 @@ export async function handleGuess(letter, message, game, activeGames) {
 
     const updateMsg = new EmbedBuilder()
       .setTitle("Guess the word to save Chiikawa!")
-      .setDescription(`\`\`\`\nWord: ${game.hiddenWord}\n\`\`\``)
+      .setDescription(
+        `Category is top 50 songs in PH!\n\n \`\`\`\nWord: ${game.hiddenWord}\n\`\`\``,
+      )
       .setColor(0xed4245)
       .addFields(
         {
